@@ -1,0 +1,127 @@
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  text-align: center;
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.login-header {
+  margin-bottom: 24px;
+}
+
+.logo-circle {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.5);
+}
+
+.login-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.login-header p {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.section-label {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.peer-id-section {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--panel-border);
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.id-display-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.id-display {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+  color: var(--text-main);
+  border-radius: 8px;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.copy-btn.copied {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.helper-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.divider span {
+  padding: 0 16px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

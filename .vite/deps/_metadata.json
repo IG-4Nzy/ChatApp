@@ -1,0 +1,44 @@
+{
+  "hash": "73c0475b",
+  "configHash": "20c38121",
+  "lockfileHash": "d19cac31",
+  "browserHash": "0786c25c",
+  "optimized": {
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.mjs",
+      "file": "lucide-react.js",
+      "fileHash": "5b0a9089",
+      "needsInterop": false
+    },
+    "peerjs": {
+      "src": "../../node_modules/peerjs/dist/bundler.mjs",
+      "file": "peerjs.js",
+      "fileHash": "df67176f",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "050bcc9f",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "57d4199e",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "5864f325",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-CYJPkc-J": {
+      "file": "chunk-CYJPkc-J.js",
+      "isDynamicEntry": false
+    }
+  }
+}
