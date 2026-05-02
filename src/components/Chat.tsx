@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect, useRef } from 'react';
 import { Send, LogOut, MessageSquare, Trash2 } from 'lucide-react';
 import type { DataConnection } from 'peerjs';
 import './Chat.css';

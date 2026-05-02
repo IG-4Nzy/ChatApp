@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MessageSquare, Link, Copy, CheckCircle } from 'lucide-react';
 import './Login.css';
 
