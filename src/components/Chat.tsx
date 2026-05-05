@@ -16,29 +16,15 @@ interface ChatProps {
   myId: string;
 }
 
-const STORAGE_KEY = 'p2p_chat_history';
-
 export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Load local history
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setMessages(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse history', e);
-      }
-    }
-
     const handleData = (data: any) => {
       setMessages((prev) => {
-        const updated = [...prev, data].sort((a, b) => a.time - b.time);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        return updated;
+        return [...prev, data].sort((a, b) => a.time - b.time);
       });
     };
 
@@ -66,17 +52,11 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
 
     connection.send(newMsg);
     
-    setMessages((prev) => {
-      const updated = [...prev, newMsg];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return updated;
-    });
-    
+    setMessages((prev) => [...prev, newMsg]);
     setInput('');
   };
 
   const clearHistory = () => {
-    localStorage.removeItem(STORAGE_KEY);
     setMessages([]);
   };
 
