@@ -1,26 +1,18 @@
 import { useState } from 'react';
-import { MessageSquare, Link, Copy, CheckCircle } from 'lucide-react';
+import { Radio } from 'lucide-react';
 import './Login.css';
 
 interface LoginProps {
-  myId: string;
-  onConnect: (id: string) => void;
+  onConnect: (channel: string) => void;
 }
 
-export default function Login({ myId, onConnect }: LoginProps) {
-  const [remoteId, setRemoteId] = useState('');
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(myId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+export default function Login({ onConnect }: LoginProps) {
+  const [channel, setChannel] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (remoteId.trim()) {
-      onConnect(remoteId.trim());
+    if (channel.trim()) {
+      onConnect(channel.trim());
     }
   };
 
@@ -29,46 +21,32 @@ export default function Login({ myId, onConnect }: LoginProps) {
       <div className="login-info-section">
         <div className="login-header">
           <div className="logo-circle">
-            <MessageSquare size={32} color="white" />
+            <Radio size={32} color="white" />
           </div>
-          <h2>4Nzy-Chat</h2>
-          <p>Connect directly with another browser</p>
-        </div>
-        
-        <div className="peer-id-section">
-          <p className="section-label">Your Peer ID</p>
-          <div className="id-display-container">
-            <code className="id-display">{myId || 'Generating...'}</code>
-            <button 
-              className={`copy-btn ${copied ? 'copied' : ''}`} 
-              onClick={handleCopy}
-              disabled={!myId}
-              title="Copy ID"
-            >
-              {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
-            </button>
-          </div>
-          <p className="helper-text">Share this ID with a friend so they can connect to you.</p>
+          <h2>Let's Chat</h2>
+          <p>Tune into a channel and start talking</p>
         </div>
       </div>
 
       <div className="divider">
-        <span>OR</span>
+        <span>TUNE IN</span>
       </div>
 
       <div className="login-form-section">
         <form onSubmit={handleSubmit} className="login-form">
-          <p className="section-label">Connect to a Friend</p>
+          <p className="section-label">Select Channel (1-999)</p>
           <input
-            type="text"
+            type="number"
+            min="1"
+            max="999"
             className="input-field"
-            placeholder="Paste friend's Peer ID"
-            value={remoteId}
-            onChange={(e) => setRemoteId(e.target.value)}
+            placeholder="e.g. 42"
+            value={channel}
+            onChange={(e) => setChannel(e.target.value)}
             required
           />
-          <button type="submit" className="btn-primary" disabled={!remoteId.trim()}>
-            <Link size={18} /> Connect
+          <button type="submit" className="btn-primary" disabled={!channel.trim()}>
+            <Radio size={18} /> Join Channel
           </button>
         </form>
       </div>

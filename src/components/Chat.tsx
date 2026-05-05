@@ -23,6 +23,8 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
 
   useEffect(() => {
     const handleData = (data: any) => {
+      if (data && data.type === 'system') return;
+      
       setMessages((prev) => {
         return [...prev, data].sort((a, b) => a.time - b.time);
       });
@@ -72,7 +74,7 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
         <div className="sidebar-header">
           <div className="app-brand">
             <MessageSquare size={24} color="var(--primary)" />
-            <h2>P2P Nexus</h2>
+            <h2>Let's Chat</h2>
           </div>
           <p className="online-count">
             <span className="dot"></span> Connected
@@ -82,12 +84,12 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
         <div className="users-list">
           <h3>Connection Info</h3>
           <div className="info-card">
-            <p className="label">My ID:</p>
-            <p className="value">{myId}</p>
+            <p className="label">Channel:</p>
+            <p className="value">{myId.startsWith('radio-') ? myId.replace('radio-', '') : connection.peer.replace('radio-', '')}</p>
           </div>
           <div className="info-card remote">
-            <p className="label">Remote Peer ID:</p>
-            <p className="value">{connection.peer}</p>
+            <p className="label">Role:</p>
+            <p className="value">{myId.startsWith('radio-') ? 'Host' : 'Guest'}</p>
           </div>
         </div>
 
