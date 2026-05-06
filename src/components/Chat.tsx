@@ -11,29 +11,54 @@ interface Message {
 }
 
 interface ChatProps {
-  connection: DataConnection;
+  connections: DataConnection[];
   onDisconnect: () => void;
   myId: string;
+  isGroupChat: boolean;
 }
 
-export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
+export default function Chat({ connections, onDisconnect, myId, isGroupChat }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleData = (data: any) => {
+    const handleData = (data: any, senderConn: DataConnection) => {
       if (data && data.type === 'system') return;
       
-      setMessages((prev) => [...prev, data]);
+      setMessages((prev) => {
+         // Prevent duplicates
+         if (prev.find(m => m.id === data.id)) return prev;
+         return [...prev, data];
+      });
+
+      // If we are the host, relay the message to all OTHER connected guests
+      if (myId.startsWith('radio-')) {
+        connections.forEach(conn => {
+          if (conn.peer !== senderConn.peer && conn.open) {
+            conn.send(data);
+          }
+        });
+      }
     };
 
-    connection.on('data', handleData);
+    const listeners = new Map();
+
+    connections.forEach(conn => {
+      const listener = (data: any) => handleData(data, conn);
+      listeners.set(conn.peer, listener);
+      conn.on('data', listener);
+    });
 
     return () => {
-      connection.off('data', handleData);
+      connections.forEach(conn => {
+        const listener = listeners.get(conn.peer);
+        if (listener) {
+          conn.off('data', listener);
+        }
+      });
     };
-  }, [connection]);
+  }, [connections, myId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,7 +75,11 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
       time: Date.now()
     };
 
-    connection.send(newMsg);
+    connections.forEach(conn => {
+      if (conn.open) {
+        conn.send(newMsg);
+      }
+    });
     
     setMessages((prev) => [...prev, newMsg]);
     setInput('');
@@ -65,6 +94,15 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const getUserColor = (userId: string) => {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 75%, 60%)`;
+  };
+
   return (
     <div className="chat-layout">
       {/* Sidebar */}
@@ -75,7 +113,7 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
             <h2>Let's Chat</h2>
           </div>
           <p className="online-count">
-            <span className="dot"></span> Connected
+            <span className="dot"></span> {isGroupChat ? `${connections.length + 1} Connected` : 'Connected'}
           </p>
         </div>
         
@@ -83,7 +121,11 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
           <h3>Connection Info</h3>
           <div className="info-card">
             <p className="label">Channel:</p>
-            <p className="value">{myId.startsWith('radio-') ? myId.replace('radio-', '') : connection.peer.replace('radio-', '')}</p>
+            <p className="value">
+              {myId.startsWith('radio-') 
+                ? myId.replace('radio-', '') 
+                : connections[0]?.peer.replace('radio-', '')}
+            </p>
           </div>
           <div className="info-card remote">
             <p className="label">Role:</p>
@@ -106,7 +148,7 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
       <main className="chat-main glass-panel">
         <div className="chat-header">
           <div className="header-info">
-            <h2>Direct Chat</h2>
+            <h2>{isGroupChat ? 'Group Chat' : 'Direct Chat'}</h2>
             <p>End-to-end encrypted connection</p>
           </div>
           <div className="message-counter">
@@ -118,14 +160,23 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
           {messages.map((msg, idx) => {
             const isMe = msg.senderId === myId;
             const showAvatar = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
+            const userColor = getUserColor(msg.senderId);
+            const shortId = msg.senderId.replace('radio-', '').substring(0, 4).toUpperCase();
             
             return (
               <div key={msg.id} className={`message-wrapper ${isMe ? 'me' : 'other'} ${!showAvatar ? 'continued' : ''}`}>
                 {!isMe && showAvatar && (
-                  <div className="message-avatar">P</div>
+                  <div className="message-avatar" style={{ backgroundColor: userColor, color: '#1a1a1a' }}>
+                    {shortId.substring(0, 1)}
+                  </div>
                 )}
                 <div className="message-content">
-                  <div className="message-bubble">
+                  {!isMe && showAvatar && (
+                    <span style={{ color: userColor, fontSize: '11px', fontWeight: 600, marginBottom: '2px', marginLeft: '4px' }}>
+                      User {shortId}
+                    </span>
+                  )}
+                  <div className="message-bubble" style={!isMe ? { borderLeft: `3px solid ${userColor}` } : {}}>
                     <p>{msg.text}</p>
                     <span className="message-time">{formatTime(msg.time)}</span>
                   </div>

@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { Radio } from 'lucide-react';
+import { Radio, Users, User } from 'lucide-react';
 import './Login.css';
 
 interface LoginProps {
-  onConnect: (channel: string) => void;
+  onConnect: (channel: string, isGroup: boolean) => void;
 }
 
 export default function Login({ onConnect }: LoginProps) {
   const [channel, setChannel] = useState('');
+  const [isGroup, setIsGroup] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (channel.trim()) {
-      onConnect(channel.trim());
+      onConnect(channel.trim(), isGroup);
     }
   };
 
@@ -34,6 +35,22 @@ export default function Login({ onConnect }: LoginProps) {
 
       <div className="login-form-section">
         <form onSubmit={handleSubmit} className="login-form">
+          <div className="chat-type-selection">
+            <button 
+              type="button" 
+              className={`type-btn ${!isGroup ? 'active' : ''}`}
+              onClick={() => setIsGroup(false)}
+            >
+              <User size={16} /> 1-on-1 Chat
+            </button>
+            <button 
+              type="button" 
+              className={`type-btn ${isGroup ? 'active' : ''}`}
+              onClick={() => setIsGroup(true)}
+            >
+              <Users size={16} /> Group Chat
+            </button>
+          </div>
           <p className="section-label">Select Channel (1-999)</p>
           <input
             type="number"

@@ -7,10 +7,12 @@ import Chat from './components/Chat';
 function App() {
   const [peer, setPeer] = useState<Peer | null>(null);
   const [myId, setMyId] = useState<string>('');
-  const [connection, setConnection] = useState<DataConnection | null>(null);
+  const [connections, setConnections] = useState<DataConnection[]>([]);
   const [error, setError] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [waitingForPeer, setWaitingForPeer] = useState<boolean>(false);
+  const [inChat, setInChat] = useState<boolean>(false);
+  const [isGroupChat, setIsGroupChat] = useState<boolean>(false);
 
   useEffect(() => {
     // Force HTTPS because Android Chrome blocks WebRTC on HTTP connections
@@ -19,7 +21,8 @@ function App() {
     }
   }, []);
 
-  const handleConnect = async (channelStr: string) => {
+  const handleConnect = async (channelStr: string, isGroup: boolean) => {
+    setIsGroupChat(isGroup);
     setIsConnecting(true);
     setError('');
     setWaitingForPeer(false);
@@ -29,6 +32,8 @@ function App() {
       peer.destroy();
       setPeer(null);
     }
+    setConnections([]);
+    setInChat(false);
 
     const channelId = `radio-${channelStr}`;
 
@@ -96,24 +101,24 @@ function App() {
         }
       });
 
-      let activeConn: DataConnection | null = null;
+      let activeConnections = 0;
 
       hostPeer.on('connection', (conn) => {
-        if (activeConn) {
-          // Channel is full. Tell the guest and close.
+        if (!isGroup && activeConnections >= 1) {
+          // Channel is full (1-on-1 mode only allows 1 guest)
           conn.on('open', () => {
             conn.send({ type: 'system', action: 'reject', reason: 'Channel is full' });
             setTimeout(() => conn.close(), 500);
           });
           return;
         }
-        
-        activeConn = conn;
+
+        activeConnections++;
         setWaitingForPeer(false);
         setupConnectionEvents(conn);
-        
+
         conn.on('close', () => {
-          if (activeConn === conn) activeConn = null;
+          activeConnections--;
         });
       });
 
@@ -135,9 +140,13 @@ function App() {
       if (conn.peerConnection) {
         conn.peerConnection.oniceconnectionstatechange = () => {
           if (conn.peerConnection.iceConnectionState === 'failed') {
-            setError('Connection blocked by firewall or network error.');
-            setIsConnecting(false);
-            conn.close();
+            if (myId.startsWith('radio-')) {
+               setConnections(prev => prev.filter(c => c.peer !== conn.peer));
+            } else {
+               setError('Connection blocked by firewall or network error.');
+               setIsConnecting(false);
+               handleDisconnect();
+            }
           }
         };
       }
@@ -145,7 +154,11 @@ function App() {
     setTimeout(checkIceState, 500);
 
     conn.on('open', () => {
-      setConnection(conn);
+      setConnections(prev => {
+        if (prev.find(c => c.peer === conn.peer)) return prev;
+        return [...prev, conn];
+      });
+      setInChat(true);
       setIsConnecting(false);
       setError('');
     });
@@ -153,35 +166,38 @@ function App() {
     conn.on('data', (data: any) => {
       if (data && data.type === 'system' && data.action === 'reject') {
         setError(data.reason || 'Connection rejected.');
-        conn.close();
+        handleDisconnect();
       }
     });
 
     conn.on('close', () => {
-      setConnection(null);
-      setWaitingForPeer(false);
-      localStorage.removeItem('p2p_chat_history');
+      setConnections(prev => prev.filter(c => c.peer !== conn.peer));
+      if (!myId.startsWith('radio-')) {
+        handleDisconnect();
+      }
     });
 
     conn.on('error', (err) => {
       console.error('Connection error:', err);
-      setError(err.message || 'Connection error.');
-      setIsConnecting(false);
-      setConnection(null);
-      localStorage.removeItem('p2p_chat_history');
+      setConnections(prev => prev.filter(c => c.peer !== conn.peer));
+      if (!myId.startsWith('radio-')) {
+        setError(err.message || 'Connection error.');
+        setIsConnecting(false);
+        handleDisconnect();
+      }
     });
   };
 
   const handleDisconnect = () => {
-    if (connection) {
-      connection.close();
-      setConnection(null);
-    }
+    connections.forEach(conn => conn.close());
+    setConnections([]);
     if (peer) {
       peer.destroy();
       setPeer(null);
     }
     setWaitingForPeer(false);
+    setInChat(false);
+    localStorage.removeItem('p2p_chat_history');
   };
 
   return (
@@ -192,7 +208,7 @@ function App() {
           <button onClick={() => setError('')} style={{ marginLeft: '10px', background: 'transparent', border: '1px solid white', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>Dismiss</button>
         </div>
       )}
-      {!connection ? (
+      {!inChat ? (
         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           {isConnecting && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10, borderRadius: '24px' }}>
@@ -210,7 +226,7 @@ function App() {
           <Login onConnect={handleConnect} />
         </div>
       ) : (
-        <Chat connection={connection} onDisconnect={handleDisconnect} myId={myId} />
+        <Chat connections={connections} onDisconnect={handleDisconnect} myId={myId} isGroupChat={isGroupChat} />
       )}
     </>
   );
