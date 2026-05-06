@@ -25,9 +25,7 @@ export default function Chat({ connection, onDisconnect, myId }: ChatProps) {
     const handleData = (data: any) => {
       if (data && data.type === 'system') return;
       
-      setMessages((prev) => {
-        return [...prev, data].sort((a, b) => a.time - b.time);
-      });
+      setMessages((prev) => [...prev, data]);
     };
 
     connection.on('data', handleData);
